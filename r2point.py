@@ -5,7 +5,8 @@ class R2Point:
     """ Точка (Point) на плоскости (R2) """
 
     # Конструктор
-    def __init__(self, x=None, y=None):
+    def __init__(self, x=None, y=None, comment=""):
+        print(comment, end="")
         if x is None:
             x = float(input("x -> "))
         if y is None:
@@ -43,6 +44,18 @@ class R2Point:
         if isinstance(other, type(self)):
             return self.x == other.x and self.y == other.y
         return False
+
+    # С какой стороны от прямой лежит точка?
+    @staticmethod
+    def deviation(p1, p2, px):
+        dev = (p2.y - p1.y) * px.x + (p1.x - p2.x) * px.y + \
+              (p1.y - p2.y) * p1.x + (p2.x - p1.x) * p1.y
+        if dev == 0:
+            return 0
+        elif dev >= 0:
+            return 1
+        else:
+            return -1
 
 
 if __name__ == "__main__":

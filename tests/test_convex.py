@@ -8,6 +8,7 @@ class TestVoid:
 
     # Инициализация (выполняется для каждого из тестов класса)
     def setup_method(self):
+        Figure.set_line(R2Point(0, 0), R2Point(1, 1))
         self.f = Void()
 
     # Нульугольник является фигурой
@@ -30,12 +31,19 @@ class TestVoid:
     def test_add(self):
         assert isinstance(self.f.add(R2Point(0.0, 0.0)), Point)
 
+    # Нульугольник не может быть пересечен прямой
+    def test_cardinality(self):
+        assert self.f.cardinality() == 0
+
 
 class TestPoint:
 
     # Инициализация (выполняется для каждого из тестов класса)
     def setup_method(self):
         self.f = Point(R2Point(0.0, 0.0))
+        self.g_line = R2Point(1, 0), R2Point(1, 1)
+        self.f_line = R2Point(0, 0), R2Point(1, 1)
+        Figure.set_line(self.g_line[0], self.g_line[1])
 
     # Одноугольник является фигурой
     def test_figure(self):
@@ -61,12 +69,38 @@ class TestPoint:
     def test_add2(self):
         assert isinstance(self.f.add(R2Point(1.0, 0.0)), Segment)
 
+    # Одноугольник может быть или пересечен, или не пересечен прямой
+    def test_cardinality1(self):
+        Figure.set_line(self.g_line[0], self.g_line[1])
+        assert self.f.cardinality() == 0
+
+    def test_cardinality2(self):
+        Figure.set_line(self.f_line[0], self.f_line[1])
+        self.f = Point(R2Point(0.0, 0.0))
+        assert self.f.cardinality() == 1
+
+    # При отсутствии изменений оболочки пересчет мощности не производится
+    def test_cardinality0(self):
+        Figure.set_line(self.g_line[0], self.g_line[1])
+        self.f = Point(R2Point(0.0, 0.0))
+        self.f.cardinality()
+        assert self.f.add(R2Point(0.0, 0.0)).cardinality() == 0
+
 
 class TestSegment:
 
     # Инициализация (выполняется для каждого из тестов класса)
     def setup_method(self):
+        self.f_line = R2Point(0, 0), R2Point(1, 1)
+        Figure.set_line(self.f_line[0], self.f_line[1])
         self.f = Segment(R2Point(0.0, 0.0), R2Point(1.0, 0.0))
+        self.g_line = R2Point(0, 1), R2Point(2, 1)
+        Figure.set_line(self.g_line[0], self.g_line[1])
+        self.g = Segment(R2Point(0.0, 0.0), R2Point(1.0, 0.0))
+        self.h_line = R2Point(0, 0), R2Point(2, 0)
+        Figure.set_line(self.h_line[0], self.h_line[1])
+        self.h = Segment(R2Point(0.0, 0.0), R2Point(1.0, 0.0))
+        Figure.set_line(self.f_line[0], self.f_line[1])
 
     # Двуугольник является фигурой
     def test_figure(self):
@@ -88,11 +122,6 @@ class TestSegment:
     def test_add1(self):
         assert self.f.add(R2Point(0.5, 0.0)) is self.f
 
-    # Он не изменяется в том случае, когда добавляемая точка совпадает
-    # с одним из концов отрезка
-    def test_add1(self):
-        assert self.f.add(R2Point(0.0, 0.0)) is self.f
-
     # При добавлении точки правее двуугольник может превратиться в другой
     # двуугольник
     def test_add2(self):
@@ -107,15 +136,44 @@ class TestSegment:
     def test_add4(self):
         assert isinstance(self.f.add(R2Point(0.0, 1.0)), Polygon)
 
+    # Двуугольник может быть пересечен или не пересечен прямой,
+    # а также являться ее частью
+    def test_cardinality1(self):
+        assert self.f.cardinality() == 1
+
+    def test_cardinality2(self):
+        Figure.set_line(self.g_line[0], self.g_line[1])
+        assert self.g.cardinality() == 0
+
+    def test_cardinality3(self):
+        Figure.set_line(self.h_line[0], self.h_line[1])
+        assert self.h.cardinality() == "continuum"
+
+    # При отсутствии изменений оболочки пересчет мощности не производится
+    def test_cardinality0(self):
+        self.g_line = R2Point(0, 1), R2Point(2, 1)
+        self.g.cardinality()
+        assert self.g.add(R2Point(0.0, 0.0)).cardinality() == 0
+
 
 class TestPolygon:
 
     # Инициализация (выполняется для каждого из тестов класса)
     def setup_method(self):
+        Figure.set_line(R2Point(0.0, 0.0), R2Point(1.0, 1.0))
         self.a = R2Point(0.0, 0.0)
         self.b = R2Point(1.0, 0.0)
         self.c = R2Point(0.0, 1.0)
-        self.f = Polygon(self.a, self.b, self.c)
+        self.g = Polygon(R2Point(0.0, 1.0),
+                         R2Point(1.0, 2.0),
+                         R2Point(0.0, 2.0), 0)
+        self.h = Polygon(R2Point(0.0, -1.0),
+                         R2Point(0.0, 0.0),
+                         R2Point(1.0, 0.0), 0)
+        self.s = Polygon(R2Point(0.0, -1.0),
+                         R2Point(0.0, 0.0),
+                         R2Point(1.0, 1.0), 1)
+        self.f = Polygon(self.a, self.b, self.c, 2)
 
     # Многоугольник является фигурой
     def test_figure(self):
@@ -127,7 +185,7 @@ class TestPolygon:
 
     # Изменение порядка точек при создании объекта всё равно порождает Polygon
     def test_polygon2(self):
-        self.f = Polygon(self.b, self.a, self.c)
+        self.f = Polygon(self.b, self.a, self.c, 1)
         assert isinstance(self.f, Polygon)
 
     # Изменение количества вершин многоугольника
@@ -177,3 +235,99 @@ class TestPolygon:
     #   добавление точки может увеличить площадь
     def test_area2(self):
         assert self.f.add(R2Point(1.0, 1.0)).area() == approx(1.0)
+
+    # Многоугольник может быть пересечен прямой в одной или двух точках,
+    # или не пересечен прямой, также его граница может совпадать с прямой
+    def test_cardinality010(self):
+        assert self.g.cardinality() == 0
+
+    def test_cardinality020(self):
+        assert self.h.cardinality() == 1
+
+    def test_cardinality030(self):
+        assert self.f.cardinality() == 2
+
+    def test_cardinality040(self):
+        assert self.s.cardinality() == "continuum"
+
+    def test_cardinality110(self):
+        assert self.g.add(R2Point(1.0, 1.0)).cardinality() == 1
+
+    def test_cardinality111(self):
+        assert self.g.add(R2Point(1.0, 0.0)).cardinality() == 2
+
+    def test_cardinality120(self):
+        assert self.h.add(R2Point(1.6, 1.6)).cardinality() == "continuum"
+
+    def test_cardinality121(self):
+        assert self.h.add(R2Point(1.0, 4.0)).cardinality() == 2
+
+    def test_cardinality140(self):
+        assert self.s.add(R2Point(15.0, 73.0)).cardinality() == 2
+
+    def test_cardinality310(self):
+        assert (self.g.add(R2Point(1.0, 4.0))
+                .add(R2Point(7.0, 8.0))
+                .add(R2Point(-4.0, 0.0)).cardinality() == 0)
+
+    def test_cardinality311(self):
+        assert (self.g.add(R2Point(1.0, 4.0))
+                .add(R2Point(1.0, 1.0))
+                .add(R2Point(-4.0, 10.0)).cardinality() == 1)
+
+    def test_cardinality312(self):
+        assert (self.g.add(R2Point(4.0, 4.0))
+                .add(R2Point(7.0, 8.0))
+                .add(R2Point(-5.0, -5.0)).cardinality() == "continuum")
+
+    def test_cardinality313(self):
+        assert (self.g.add(R2Point(1.0, 4.0))
+                .add(R2Point(7.0, 8.0))
+                .add(R2Point(-4.0, -5.0)).cardinality() == 2)
+
+    def test_cardinality320(self):
+        assert (self.h.add(R2Point(-3.4, -6.8))
+                .add(R2Point(-7.0, -10.0))
+                .add(R2Point(1.0, 1.0)).cardinality() == "continuum")
+
+    def test_cardinality000(self):
+        Figure.set_line(R2Point(0.0, 0.0), R2Point(1.3, -1.3))
+        self.s = Polygon(R2Point(0.0, -1.0),
+                         R2Point(1.0, 1.0),
+                         R2Point(0.0, 0.0), 1)
+        assert self.s.cardinality() == 2
+
+    def test_cardinality001(self):
+        Figure.set_line(R2Point(0.0, 0.0), R2Point(1.0, -1.0))
+        self.s = Polygon(R2Point(0.0, -1.0),
+                         R2Point(1.0, 1.0),
+                         R2Point(0.0, 0.0), 1)
+        assert self.s.cardinality() == 2
+
+    def test_cardinality002(self):
+        Figure.set_line(R2Point(0.0, 0.0), R2Point(1.0, -1.0))
+        self.s = Polygon(R2Point(0.0, -1.0),
+                         R2Point(1.0, -3.0),
+                         R2Point(0.0, 0.0), 1)
+        assert self.s.cardinality() == 1
+
+    def test_cardinality003(self):
+        Figure.set_line(R2Point(3.0, 0.0), R2Point(1.0, -1.0))
+        self.s = Polygon(R2Point(-5.0, -11.4),
+                         R2Point(1.0, -3.0),
+                         R2Point(-60.0, 987.9), 0)
+        assert self.s.cardinality() == 0
+
+    def test_cardinality_continuum_error(self):
+        Figure.set_line(R2Point(0.0, 0.0), R2Point(1.0, 0.0))
+        self.s = Polygon(R2Point(0.0, 0.0),
+                         R2Point(1.0, 1.0),
+                         R2Point(1.0, 0.0), 'continuum')
+        assert self.s.cardinality() == 'continuum'
+
+    def test_cardinality_continuum_error2(self):
+        Figure.set_line(R2Point(0.0, 0.0), R2Point(1.0, 0.0))
+        self.s = Polygon(R2Point(0.0, 0.0),
+                         R2Point(-1.0, -1.0),
+                         R2Point(1.0, 0.0), 'continuum')
+        assert self.s.cardinality() == 'continuum'

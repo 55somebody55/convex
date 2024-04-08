@@ -85,3 +85,26 @@ class TestR2Point:
     # Точка и кортеж отличаются
     def test_eq2(self):
         assert R2Point(1.0, 1.0) != (1.0, 1.0)
+
+    # Точки по одну и разные стороны от прямой
+    def test_deviation1(self):
+        assert (R2Point.deviation(R2Point(0.0, 0.0),
+                                  R2Point(1.0, 1.0),
+                                  R2Point(0.0, 1.0))
+                != R2Point.deviation(R2Point(0.0, 0.0),
+                                     R2Point(1.0, 1.0),
+                                     R2Point(1.0, 0.0)))
+
+    def test_deviation2(self):
+        assert (R2Point.deviation(R2Point(0.0, 0.0),
+                                  R2Point(1.0, 1.0),
+                                  R2Point(0.0, 1.0))
+                == R2Point.deviation(R2Point(0.0, 0.0),
+                                     R2Point(1.0, 1.0),
+                                     R2Point(1.0, 5.0)))
+
+    # Лежит ли точка на прямой
+    def test_deviation(self):
+        assert (R2Point.deviation(R2Point(0.0, 0.0),
+                                  R2Point(1.0, 1.0),
+                                  R2Point(3.0, 3.0)) == 0)

@@ -1,7 +1,7 @@
 #!/usr/bin/env -S python3 -B
 from tk_drawer import TkDrawer
 from r2point import R2Point
-from convex import Void, Point, Segment, Polygon
+from convex import Void, Point, Segment, Polygon, Figure
 
 
 def void_draw(self, tk):
@@ -29,6 +29,8 @@ setattr(Polygon, 'draw', polygon_draw)
 
 
 tk = TkDrawer()
+Figure.set_line(R2Point(comment="Первая точка секущей прямой\n"),
+                R2Point(comment="Вторая точка секущей прямой\n"))
 f = Void()
 tk.clean()
 
@@ -37,7 +39,9 @@ try:
         f = f.add(R2Point())
         tk.clean()
         f.draw(tk)
-        print(f"S = {f.area()}, P = {f.perimeter()}\n")
+        print(f"S = {f.area()}, P = {f.perimeter()}, Мощность множества"
+              f" пересечения - {f.cardinality()}")
+        print()
 except (EOFError, KeyboardInterrupt):
     print("\nStop")
     tk.close()
